@@ -16,6 +16,16 @@ class ExpenseCreate(BaseModel):
     user_id: int = Field(gt=0)
 
 
+class ExpenseUpdate(BaseModel):
+
+    merchant: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=200)
+    amount: Decimal | None = Field(default=None,gt=0)
+    category: ExpenseCategory | None = None
+    expense_date: date | None = None
+    notes: str | None = Field(default=None, max_length=500)
+
+
 class ExpenseResponse(BaseModel):
 
     id: int

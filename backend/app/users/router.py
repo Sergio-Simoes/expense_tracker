@@ -4,11 +4,7 @@ from app.database import get_db
 from . import schemas, crud
 
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"]
-)
-
+router = APIRouter( prefix="/users", tags=["users"] )
 
 @router.post("/", response_model=schemas.UserResponse)
 def create_user(
