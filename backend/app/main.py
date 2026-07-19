@@ -3,9 +3,9 @@ from app.database import engine, Base
 
 from app.users import models as user_models
 from app.users import router as user_router
+
 from app.expenses import models as expense_models
 from app.expenses import router as expense_router
-from app.expenses import models
 
 from app.reports import router as report_router
 
