@@ -11,3 +11,7 @@ router = APIRouter(prefix="/reports", tags=["Reports"])
 @router.get("/monthly", response_model=schemas.MonthlyReport)
 def get_monthly_report(year: int, month: int, db: Session = Depends(get_db)):
     return crud.get_monthly_report(db, year, month)
+
+@router.get("/trends", response_model=schemas.TrendsResponse)
+def get_speding_trends(months: int = 12, db: Session = Depends(get_db)):
+    return crud.get_spending_trends(db, months)

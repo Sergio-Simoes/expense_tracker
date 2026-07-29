@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -18,12 +19,14 @@ class MonthlyReport(BaseModel):
 
 class TopExpense(BaseModel):
     merchant: str
+    description: str
     amount: Decimal
     category: str
-
+    expense_date: date
 
 class UserSummary(BaseModel):
-    user: str
+    user_id: int
+    user_name: str
     total_spent: Decimal
     total_expenses: int
     top_expenses: list[TopExpense]
@@ -40,3 +43,12 @@ class MonthlyReport(BaseModel):
     household: HouseholdSummary
     categories: list[CategorySummary]
     users: list[UserSummary]
+
+class MontthlyTrend(BaseModel):
+    year: int
+    month: int
+    label: str
+    total_spent: Decimal
+
+class TrendsResponse(BaseModel):
+    trends: list[MontthlyTrend]
