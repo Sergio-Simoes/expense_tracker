@@ -1,9 +1,12 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.expenses import crud as expense_crud
 from app.expenses import schemas as expense_schemas
+from app.expenses import enums as expenses_enums
 
 from . import schemas, crud
 
@@ -16,8 +19,10 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 
 
 @router.get("/", response_model=list[schemas.ExpenseResponse])
-def get_expenses(db: Session = Depends(get_db)):
-    return crud.get_expenses(db)
+def get_expenses(db: Session = Depends(get_db), user_id: int | None = None, category: expenses_enums.ExpenseCategory | None = None, 
+                 merchant: str | None = None, start_date: date | None = None, end_date: date | None = None, 
+                 min_amount: float | None = None, max_amount: float | None = None):
+    return crud.get_expenses(db, user_id, category, merchant, start_date, end_date, min_amount, max_amount)
 
 
 @router.get("/{expense_id}", response_model=schemas.ExpenseResponse)

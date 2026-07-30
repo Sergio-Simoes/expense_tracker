@@ -1,7 +1,10 @@
+from datetime import date
 from sqlalchemy.orm import Session
 
 from .models import Expense
 from .schemas import ExpenseCreate
+
+from app.expenses import enums as expenses_enums
 
 
 def create_expense(db: Session, expense: ExpenseCreate):
@@ -21,8 +24,32 @@ def create_expense(db: Session, expense: ExpenseCreate):
     return db_expense
 
 
-def get_expenses(db: Session):
-    return db.query(Expense).all()
+def get_expenses(db: Session, 
+                 user_id: int | None = None, 
+                 category: expenses_enums.ExpenseCategory | None = None, 
+                 merchant: str | None = None, 
+                 start_date: date | None = None, 
+                 end_date: date | None = None, 
+                 min_amount: float | None = None, 
+                 max_amount: float | None = None):
+    query = db.query(Expense)
+
+    if user_id is not None:
+        query = query.filter(Expense.user_id == user_id)
+    if category is not None:
+        query = query.filter(Expense.category == category)
+    if merchant is not None:
+        query = query.filter(Expense.merchant.ilike(f"%{merchant}%"))
+    if start_date is not None:
+        query = query.filter(Expense.expense_date >= start_date)
+    if end_date is not None:
+        query = query.filter(Expense.expense_date <= end_date)
+    if min_amount is not None:
+        query = query.filter(Expense.amount >= min_amount)
+    if max_amount is not None:
+        query = query.filter(Expense.amount <= max_amount)
+
+    return query.order_by(Expense.expense_date.desc()).all()
 
 
 def get_user_expenses(db: Session, user_id: int):
