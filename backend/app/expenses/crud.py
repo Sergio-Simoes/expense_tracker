@@ -31,7 +31,11 @@ def get_expenses(db: Session,
                  start_date: date | None = None, 
                  end_date: date | None = None, 
                  min_amount: float | None = None, 
-                 max_amount: float | None = None):
+                 max_amount: float | None = None, 
+                 sort_by: str = "expense_date", 
+                 sort_order: str = "desc", 
+                 skip: int = 0, 
+                 limit: int = 50):
     query = db.query(Expense)
 
     if user_id is not None:
@@ -49,7 +53,21 @@ def get_expenses(db: Session,
     if max_amount is not None:
         query = query.filter(Expense.amount <= max_amount)
 
-    return query.order_by(Expense.expense_date.desc()).all()
+    sort_columns = {
+        "date": Expense.expense_date,
+        "amount": Expense.amount,
+        "merchant": Expense.merchant,
+        "created": Expense.created_at
+    }
+
+    column = sort_columns.get(sort_by, Expense.expense_date)
+
+    if sort_order.lower() == "asc":
+        query.order_by(column.asc())
+    else:
+        query.order_by(column.desc())
+
+    return query.offset(skip).limit(limit).all()
 
 
 def get_user_expenses(db: Session, user_id: int):

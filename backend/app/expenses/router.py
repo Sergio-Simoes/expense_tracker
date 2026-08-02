@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -21,8 +21,9 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 @router.get("/", response_model=list[schemas.ExpenseResponse])
 def get_expenses(db: Session = Depends(get_db), user_id: int | None = None, category: expenses_enums.ExpenseCategory | None = None, 
                  merchant: str | None = None, start_date: date | None = None, end_date: date | None = None, 
-                 min_amount: float | None = None, max_amount: float | None = None):
-    return crud.get_expenses(db, user_id, category, merchant, start_date, end_date, min_amount, max_amount)
+                 min_amount: float | None = None, max_amount: float | None = None, sort_by: str = "date", sort_order: str = "desc", 
+                 skip: int = Query(default=0, ge=0), limit: int = Query(default=50, ge=1, le=200)):
+    return crud.get_expenses(db, user_id, category, merchant, start_date, end_date, min_amount, max_amount, sort_by, sort_order, skip, limit)
 
 
 @router.get("/{expense_id}", response_model=schemas.ExpenseResponse)
