@@ -9,6 +9,9 @@ from app.expenses import router as expense_router
 
 from app.reports import router as report_router
 
+from app.ai import router as ai_router
+
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -16,6 +19,7 @@ app = FastAPI()
 app.include_router(user_router.router)
 app.include_router(expense_router.router)
 app.include_router(report_router.router)
+app.include_router(ai_router.router)
 
 
 @app.get("/")
