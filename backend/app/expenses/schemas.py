@@ -24,6 +24,7 @@ class ExpenseUpdate(BaseModel):
     category: ExpenseCategory | None = None
     expense_date: date | None = None
     notes: str | None = Field(default=None, max_length=500)
+    user_id: int | None = None
 
 
 class ExpenseResponse(BaseModel):

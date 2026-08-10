@@ -8,15 +8,10 @@ from app.expenses import enums as expenses_enums
 
 
 def create_expense(db: Session, expense: ExpenseCreate):
-    db_expense = Expense(
-        merchant=expense.merchant,
-        description=expense.description,
-        amount=expense.amount,
-        category=expense.category.value,
-        expense_date=expense.expense_date,
-        notes=expense.notes,
-        user_id=expense.user_id
-    )
+    expense_data = expense.model_dump()
+    expense_data["category"] = expense.category.value
+    db_expense = Expense(**expense_data)
+
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
