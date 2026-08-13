@@ -5,6 +5,8 @@ from app.expenses import crud
 from app.expenses import schemas
 from app.expenses import enums as expenses_enums
 
+from app.users import crud as users_crud
+
 CATEGORY_VALUES = [category.value for category in expenses_enums.ExpenseCategory]
 
 def create_expense(db: Session, expense: schemas.ExpenseCreate):
@@ -26,6 +28,9 @@ def update_expense(db: Session, expense_id: int, expense: schemas.ExpenseUpdate)
 
 def delete_expense(db: Session, expense_id: int):
     return crud.delete_expense(db, expense_id)
+
+def get_users(db: Session):
+    return users_crud.get_users(db)
 
 create_expense_declaration = {
     "name": "create_expense",
@@ -202,5 +207,15 @@ delete_expense_declaration = {
         "required": [
             "expense_id"
         ]
+    }
+}
+
+get_users_declaration = {
+    "name": "get_users",
+    "description": "Get all users available in the expense tracker. Use this when the user refers to a specific person by name.",
+    "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
     }
 }

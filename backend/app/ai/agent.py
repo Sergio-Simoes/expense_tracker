@@ -2,7 +2,10 @@ import os
 from datetime import date
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from sqlalchemy.orm import Session
+
+from fastapi.encoders import jsonable_encoder
 
 from app.ai.schemas import ExpenseAIResult
 from app.ai import tools
@@ -37,33 +40,55 @@ def execute_tool(db: Session, function_call, user_id: int):
     if name == "delete_expense":
         return tools.delete_expense(db, arguments["expense_id"])
 
+    if name == "get_users":
+        return tools.get_users(db)
+
     return None
 
 def run_agent(db: Session, message: str, user_id: int):
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=message,
-        config={
-            "tools": [
-                {
-                    "function_declarations": [
-                        tools.create_expense_declaration,
-                        tools.get_expense_declaration,
-                        tools.get_expenses_declaration,
-                        tools.update_expense_declaration,
-                        tools.delete_expense_declaration
+    contents = [message]
+
+    while True:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=contents,
+            config={
+                "tools": [
+                    {
+                        "function_declarations": [
+                            tools.create_expense_declaration,
+                            tools.get_expense_declaration,
+                            tools.get_expenses_declaration,
+                            tools.update_expense_declaration,
+                            tools.delete_expense_declaration,
+                            tools.get_users_declaration
+                        ]
+                    }
+                ]
+            }
+        )
+
+        if not response.function_calls:
+            return {"response": response.text}
+
+        contents.append(response.candidates[0].content)
+
+        for function_call in response.function_calls:
+            result = execute_tool(db, function_call, user_id)
+            result = jsonable_encoder(result)
+
+            contents.append(
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_function_response(
+                            name=function_call.name,
+                            response={"result": result}
+                        )
                     ]
-                }
-            ]
-        }
-    )
-
-    if not response.function_calls:
-        return {"response": response.text}
-
-    function_call = response.function_calls[0]
-
-    return execute_tool(db, function_call, user_id)
+                )
+            )
+        
 
 
 def parse_expense(message: str):
