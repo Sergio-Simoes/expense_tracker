@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import date
 from dotenv import load_dotenv
 from google import genai
@@ -16,13 +17,17 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+def serialize_tool_result(result):
+    return jsonable_encoder(result)
+
+
 def execute_tool(db: Session, function_call, user_id: int):
     name = function_call.name
-    arguments = function_call.args
+    arguments = dict(function_call.args)
 
     if name == "create_expense":
         arguments["user_id"] = user_id
-        arguments["expense_date"] = arguments.get("expense_date", date.today())
+        arguments["expense_date"] = arguments.get("expense_date", date.today().isoformat())
         expense = expenses_schemas.ExpenseCreate(**arguments)
         return tools.create_expense(db, expense)
 
@@ -46,6 +51,8 @@ def execute_tool(db: Session, function_call, user_id: int):
     return None
 
 def run_agent(db: Session, message: str, user_id: int):
+    gemini_start = time.time()
+
     contents = [message]
 
     while True:
@@ -68,14 +75,18 @@ def run_agent(db: Session, message: str, user_id: int):
             }
         )
 
+        print(f"Gemini took: {time.time() - gemini_start:.2f}s")
+
         if not response.function_calls:
             return {"response": response.text}
+
+        tool_start = time.time()
 
         contents.append(response.candidates[0].content)
 
         for function_call in response.function_calls:
             result = execute_tool(db, function_call, user_id)
-            result = jsonable_encoder(result)
+            result = serialize_tool_result(result)
 
             contents.append(
                 types.Content(
@@ -88,6 +99,7 @@ def run_agent(db: Session, message: str, user_id: int):
                     ]
                 )
             )
+            print(f"Tool execution took: {time.time() - tool_start:.2f}s")
         
 
 
